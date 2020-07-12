@@ -1,0 +1,33 @@
+service: mi-primer-lambda
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: ${opt:stage,'dev'}
+  region: ${opt:region, 'us-east-1'}
+  environment: 
+    TABLE_PRODUCTS: productos-${self:provider.stage}
+    LOG_ENVIRONMENT: ${file(./serverless.env.yml):${opt:envrt}.LOGGER_ROOT_LEVEL}
+    PATH_RESOURCES: /v1/pragma/test
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Scan
+        - dynamodb:PutItem
+      Resource: arn:aws:dynamodb:us-east-1:558925653699:table/productos-${self:provider.stage}    
+
+functions:
+  createProduct:
+    handler: handler.create
+    events:
+       - http:
+          path: ${self:provider.environment.PATH_RESOURCES}/create-products
+          method: post
+    memorySize: 128
+  getAllProducts:
+    handler: handler.getAll
+    events:
+       - http:
+          path: ${self:provider.environment.PATH_RESOURCES}/getAll
+          method: get
+    memorySize: 128
